@@ -57,8 +57,27 @@
 
 <div class="loader"></div>
 <div id="box"></div>
-
 <script>
+  let autoNextEnabled = true;
+  const saved = localStorage.getItem("autoNext");
+  if (saved !== null) autoNextEnabled = saved === "true";
+
+	function updateAutoNextButton() {
+		player.removeButton("auto-next");
+
+		player.addButton(
+			autoNextEnabled
+				? '<svg viewBox="0 0 24 24" fill="white"><path d="M6 12h12v2H6z"/></svg>'
+				: '<svg viewBox="0 0 24 24" fill="gray"><path d="M4 4L20 20"/></svg>',
+			autoNextEnabled ? "Auto Next: Bật" : "Auto Next: Tắt",
+			() => {
+				autoNextEnabled = !autoNextEnabled;
+				localStorage.setItem("autoNext", autoNextEnabled);
+				updateAutoNextButton();
+			},
+			"auto-next"
+		);
+	}
   function submitUrl() {
     const val = document.getElementById("urlInput").value.trim();
     if (val) {
@@ -67,7 +86,8 @@
     }
   }
 
-  const params = new URLSearchParams(location.search);
+	const params = new URLSearchParams(location.search); 
+
   if (params.has("url")) {
     // Ẩn form nhập
     document.getElementById("inputForm").style.display = "none";
@@ -93,10 +113,85 @@
     player.setup(opts);
 
     player.on("ready", () => {
-      document.querySelector("#box").style.display = "block";
-      document.querySelector(".loader").style.display = "none";
-    });
-  }
+				document.querySelector("#box").style.display = "block";
+				document.querySelector(".loader").style.display = "none";
+				const file1 = decodeURIComponent(params.get("url") || "");
+				const folderPath = file1.split("/").slice(0, -1).join("/") + "/";
+				const folderApi = `https://api.github.com/repos/hohopro456/Viettoons/contents/${folderPath}`;
+				let episodeList = null;
+				let index = -1;
+				(async () => {
+						try {
+							const res = await fetch(folderApi);
+							const files = await res.json();
+							episodeList = files
+								.filter(f => f.name.endsWith(".m3u8"))
+								.map(f => folderPath + f.name);
+							const index = episodeList.indexOf(file1);
+							<!-- episodeList = [ -->
+								<!-- "https://example.com/E01.m3u8", -->
+								<!-- "https://example.com/E02.m3u8", -->
+								<!-- "https://example.com/E03.m3u8" -->
+							<!-- ]; -->
+							<!-- console.log("Danh sách tập:", episodeList); -->
+							const hasPrev = index > 0;
+							const hasNext = index < episodeList.length - 1;
+
+							if (hasPrev) {
+									player.addButton(
+											'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="24" height="24"><path d="M15 6l-6 6 6 6V6z"/></svg>',
+											"Tập trước",
+											() => {
+													location.href = `${location.pathname}?url=${encodeURIComponent(episodeList[index - 1])}`;
+											},
+											"prev-episode"
+									);
+							}
+							if (hasNext) {
+									player.addButton(
+											'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="24" height="24"><path d="M9 6l6 6-6 6V6z"/></svg>',
+											"Tập sau",
+											() => {
+													location.href = `${location.pathname}?url=${encodeURIComponent(episodeList[index + 1])}`;
+											},
+											"next-episode"
+									);
+							}
+
+							let autoNextEnabled = localStorage.getItem("autoNext") === "true";
+							
+							function updateAutoNextButton() {
+								player.removeButton("auto-next");
+
+								const onSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 28" width="36" height="20"><rect width="50" height="28" rx="14" fill="#white"></rect><circle cx="36" cy="14" r="10" fill="white"></circle></svg>';
+								
+								const offSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 28" width="36" height="20"><rect width="50" height="28" rx="14" fill="#888"></rect><circle cx="14" cy="14" r="10" fill="white"></circle></svg>';
+
+								player.addButton(
+									autoNextEnabled ? onSvg : offSvg,
+									autoNextEnabled ? "Auto Next: Bật" : "Auto Next: Tắt",
+									() => {
+										autoNextEnabled = !autoNextEnabled;
+										localStorage.setItem("autoNext", autoNextEnabled);
+										updateAutoNextButton();
+									},
+									"auto-next"
+								);
+							}
+
+							updateAutoNextButton();
+							player.on("complete", () => {
+								if (autoNextEnabled && hasNext) {
+									location.href = `${location.pathname}?url=${encodeURIComponent(episodeList[index + 1])}`;
+								}
+							});
+						} catch (e) {
+							console.error("Không thể tải danh sách tập:", e);
+							return;
+						}
+				})();
+			});
+	}
 </script>
 
 </body>
