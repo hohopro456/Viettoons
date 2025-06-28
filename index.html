@@ -136,17 +136,7 @@
 							<!-- console.log("Danh sách tập:", episodeList); -->
 							const hasPrev = index > 0;
 							const hasNext = index < episodeList.length - 1;
-
-							if (hasPrev) {
-									player.addButton(
-											'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="24" height="24"><path d="M15 6l-6 6 6 6V6z"/></svg>',
-											"Tập trước",
-											() => {
-													location.href = `${location.pathname}?url=${encodeURIComponent(episodeList[index - 1])}`;
-											},
-											"prev-episode"
-									);
-							}
+							
 							if (hasNext) {
 									player.addButton(
 											'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="24" height="24"><path d="M9 6l6 6-6 6V6z"/></svg>',
@@ -155,6 +145,16 @@
 													location.href = `${location.pathname}?url=${encodeURIComponent(episodeList[index + 1])}`;
 											},
 											"next-episode"
+									);
+							}
+							if (hasPrev) {
+									player.addButton(
+											'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="24" height="24"><path d="M15 6l-6 6 6 6V6z"/></svg>',
+											"Tập trước",
+											() => {
+													location.href = `${location.pathname}?url=${encodeURIComponent(episodeList[index - 1])}`;
+											},
+											"prev-episode"
 									);
 							}
 
@@ -169,7 +169,7 @@
 
 								player.addButton(
 									autoNextEnabled ? onSvg : offSvg,
-									autoNextEnabled ? "Auto Next: Bật" : "Auto Next: Tắt",
+									autoNextEnabled ? "Tự động phát: Bật" : "Tự động phát: Tắt",
 									() => {
 										autoNextEnabled = !autoNextEnabled;
 										localStorage.setItem("autoNext", autoNextEnabled);
